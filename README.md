@@ -121,7 +121,6 @@ adb install -r --user 10 app/build/outputs/apk/debug/app-debug.apk
 
 ## 시험 (`tests/`)
 에뮬레이터 콘솔(`adb forward tcp:8088 tcp:8088`)로 차량 상태를 읽어 기대값과 비교한다.
-한 번에 하나씩 실행한다(에뮬레이터 메모리가 빠듯하다).
 - `routine_test.py` 루틴 실행 · `routine_ui_test.py` 화면 조작 · `resume_test.py` 이어서 실행
 - `record_demo.py` 시연 영상 녹화 → `demo/`
 
