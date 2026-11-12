@@ -1,0 +1,10 @@
+.gradle/
+.kotlin/
+build/
+app/build/
+local.properties
+*.apk
+tests/__pycache__/
+tests/*_results.json
+demo/demo_raw.mp4
+.DS_Store
