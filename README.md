@@ -1,10 +1,24 @@
 # 원터치 루틴
 
-차량 기능 여러 개를 이름 붙여 묶어 두고, 버튼 한 번으로 순서대로 실행하는 Pleos(현대차) 인카 앱.
+운전자가 만든 ‘차 맞춤 순서’(내비·공조·열선·조명·시트)를 이름 붙여 두고, 정차 중 버튼 한 번으로 순서대로 실행하는 Pleos Connect 앱.
 예) '출근' = 내비(회사) → 공조 켜기 → 22℃ → 운전석 열선 2단 → 핸들 열선 1단
 
-- 패키지 `probe.reversemap`, minSdk/target은 `app/build.gradle.kts` 참고
-- 개발·시험 환경: Pleos Connect Emulator (AAOS 14). 실차에서는 확인하지 않았다.
+## 실행 방법
+1. Pleos Connect Emulator v2.1.0(API 34, 화면 1024×768)을 켠다.
+2. APK를 설치한다: `adb install -r --user 10 apk/<파일명>_release.apk` (에뮬레이터는 사용자 10으로 실행됨)
+3. 앱 목록에서 "원터치 루틴"을 연다. 기본 루틴 3개가 보이고 ▶ 실행으로 바로 돌릴 수 있다.
+
+소스에서 빌드하려면 `local.properties`에 `sdk.dir`을 두고 `./gradlew assembleDebug`.
+릴리스 서명은 저장소에 올리지 않는 `keystore.properties`(storeFile, storePassword, keyAlias, keyPassword)를 읽는다.
+
+## 테스트 환경
+- Pleos Connect Emulator v2.1.0 (AAOS 14, API 34), 화면 1024×768
+- 앱이 쓰는 SDK: Vehicle 2.3.2, NaviHelper 3.0.5
+- 에뮬레이터 콘솔(`adb forward tcp:8088 tcp:8088`)로 기어 등 차량 상태를 바꿔 가며 시험했다. 실차는 확인하지 못했다.
+- 정보 수집·서버 통신 없음. 인터넷 권한을 요청하지 않는다.
+
+## APK 위치
+`apk/` 폴더 (release 서명본)
 
 ## 코드 구조
 | 파일 | 역할 |

@@ -17,6 +17,19 @@ android {
         versionCode = 1
         versionName = "0.1"
     }
+    // 서명 정보는 저장소에 올리지 않는 keystore.properties 에서 읽는다
+    val ks = Properties().apply { rootProject.file("keystore.properties").takeIf { it.exists() }?.inputStream()?.let { load(it) } }
+    signingConfigs {
+        create("release") {
+            if (ks.isNotEmpty()) {
+                storeFile = rootProject.file(ks.getProperty("storeFile"))
+                storePassword = ks.getProperty("storePassword")
+                keyAlias = ks.getProperty("keyAlias")
+                keyPassword = ks.getProperty("keyPassword")
+            }
+        }
+    }
+    buildTypes { getByName("release") { signingConfig = signingConfigs.getByName("release") } }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -26,7 +39,6 @@ android {
 
 dependencies {
     implementation("ai.pleos.playground:Vehicle:2.3.2")
-    implementation("ai.pleos.playground:FusedLocation:1.1.3")
     implementation("ai.pleos.playground:NaviHelper:3.0.5")
     compileOnly(files("$sdkDir/platforms/android-35/optional/android.car.jar"))
 }
