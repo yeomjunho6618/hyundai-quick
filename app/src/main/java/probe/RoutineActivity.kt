@@ -13,8 +13,7 @@ import android.view.Gravity
 import android.view.View
 import android.widget.*
 
-/** 루틴 화면: 목록에서 한 번에 실행하고, 편집에서 제목과 기능 조합을 바꾼다. 차량 화면이라 버튼을 크게 만든다.
- *  낮/밤 두 가지 배색. */
+/** 루틴 화면. 목록에서 실행, 편집에서 제목·단계 수정. 차량 화면이라 버튼 크게 */
 class RoutineActivity : Activity() {
     private var routines = mutableListOf<Routine>()
     private lateinit var log: TextView
@@ -51,7 +50,7 @@ class RoutineActivity : Activity() {
         offerResume()
     }
 
-    /** 대기 중에 앱이 종료됐다면 남은 단계를 이어서 실행할지 묻는다. 너무 오래 지났으면 버린다. */
+    /** 대기 중 앱이 꺼졌으면 이어서 할지 묻는다. 너무 오래 지났으면 버림 */
     private fun offerResume() {
         val p = Routines.pending(this) ?: return
         if (RoutineRunner.running()) return
@@ -89,7 +88,7 @@ class RoutineActivity : Activity() {
     private fun page() = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(px(26), px(18), px(26), px(12)); setBackgroundColor(bg) }
 
 
-    /** 화면 배색과 같은 확인창. 큰 버튼 두세 개, 포인트 색은 ok 하나. ok가 null이면 닫기 버튼만 둔다. */
+    /** 확인창. ok 가 null 이면 닫기만 */
     private fun sheet(title: String, message: String? = null, body: View? = null, ok: String? = null, cancel: String? = "취소",
                       extra: String? = null, onExtra: () -> Unit = {}, onCancel: () -> Unit = {}, onOk: () -> Unit = {}) {
         val d = android.app.Dialog(this)

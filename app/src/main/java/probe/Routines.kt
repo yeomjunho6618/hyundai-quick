@@ -4,13 +4,13 @@ import android.content.Context
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** 루틴 = 제목 + 순서대로 실행할 기능 목록. 한 번 눌러 차량 설정을 한꺼번에 바꾼다. */
+/** 루틴 = 제목 + 실행할 단계 목록 */
 // value: 온도는 x10 정수(22.5도 = 225), 켜기/끄기는 1/0, 등받이는 +눕힘 -세움(초)
 // arg: 내비는 즐겨찾기 이름, 알림은 문구 / opt: 내비 경로 옵션
 data class Step(val type: String, val value: Int = 0, val arg: String = "", val opt: String = "")
 data class Routine(val id: String, val title: String, val steps: List<Step>)
 
-/** 기능 종류. min..max 를 step 씩 올리고 내린다. onOff 이면 0=끄기, 1=켜기. */
+/** 기능 종류. min..max 를 step 씩 조절. ONOFF 는 0=끄기 1=켜기 */
 data class Def(val type: String, val label: String, val min: Int, val max: Int, val step: Int, val def: Int, val kind: Kind = Kind.NUM, val unit: String = "")
 enum class Kind { NUM, ONOFF, TEMP, RECLINE, NAVI, TEXT }
 
@@ -52,7 +52,7 @@ object Routines {
         }
     }
 
-    /** 기본 루틴. 내비 목적지는 차량 내비의 즐겨찾기 이름과 맞춰 찾는다. */
+    /** 기본 루틴. 내비는 즐겨찾기 이름으로 찾음 */
     fun defaults(): List<Routine> = listOf(
         Routine("school", "등하원", listOf(
             Step("navi", 0, "", "SCHOOL_ZONE"), Step("cabin_light", 1), Step("reading_rear", 1),
@@ -79,7 +79,7 @@ object Routines {
     fun night(c: Context) = prefs(c).getBoolean("night", false)
     fun setNight(c: Context, v: Boolean) { prefs(c).edit().putBoolean("night", v).apply() }
 
-    // 기다리기 중 앱이 꺼져도 이어갈 수 있게 남은 단계와 끝날 시각을 저장
+    // 기다리는 중 앱이 꺼져도 이어가려고 남은 단계/끝 시각 저장
     class Pending(val title: String, val rest: List<Step>, val endMs: Long)
     // apply 는 비동기라 바로 앱이 죽으면 날아가서 commit
     fun savePending(c: Context, title: String, rest: List<Step>, endMs: Long) {
