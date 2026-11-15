@@ -5,7 +5,7 @@
 
 ## 실행 방법
 1. Pleos Connect Emulator v2.1.0(API 34, 화면 1024×768)을 켠다.
-2. APK를 설치한다: `adb install -r --user 10 apk/<파일명>_release.apk` (에뮬레이터는 사용자 10으로 실행됨)
+2. APK를 설치한다: `adb install -r --user 10 apk/yeomjunho_oneTouchRoutine_release.apk` (에뮬레이터는 사용자 10으로 실행됨)
 3. 앱 목록에서 "원터치 루틴"을 연다. 기본 루틴 3개가 보이고 ▶ 실행으로 바로 돌릴 수 있다.
 
 소스에서 빌드하려면 `local.properties`에 `sdk.dir`을 두고 `./gradlew assembleDebug`.
