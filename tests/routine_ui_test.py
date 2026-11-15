@@ -47,8 +47,14 @@ def row_button(prefix, label):
             ns = nodes()
             btn = [b for t, b in ns if t == label and abs((b[1] + b[3]) // 2 - ry) < 30]
             if btn:
-                b = btn[0]; sh("input", "tap", str((b[0] + b[2]) // 2), str((b[1] + b[3]) // 2)); time.sleep(0.7); return True
+                b = btn[0]; sh("input", "tap", str((b[0] + b[2]) // 2), str((b[1] + b[3]) // 2)); time.sleep(0.7)
+                if label in ("＋", "－"):    # 스크롤이 덜 멈췄을 때 첫 탭이 스크롤 정지로 쓰이는 경우가 있어 값이 안 바뀌면 한 번 더 누른다
+                    after = [t for t, _ in editor_rows() if t.startswith(prefix)]
+                    if after and after[0] == rows[0][0]:
+                        sh("input", "tap", str((b[0] + b[2]) // 2), str((b[1] + b[3]) // 2)); time.sleep(0.7)
+                return True
         swipe(670, 450, 330)
+        time.sleep(0.8)
     return False
 
 def row_text_tap(prefix):
@@ -255,7 +261,50 @@ def u5_reset():
     if "등하원" not in s: f.append("기본 루틴(등하원)이 없음")
     return f
 
-CASES = [("U1_만들기_조절_순서_삭제_저장_실행", u1_create), ("U2_검증_취소", u2_validation), ("U3_기존편집", u3_edit_existing), ("U4_삭제", u4_delete), ("U5_기본으로되돌리기", u5_reset)]
+def u6_stop_default():
+    """기본 루틴 '휴식 10분'을 화면에서 실행하고 기다리는 도중 중지를 누른다. 남은 단계가 실행되지 않아야 한다."""
+    f = []
+    fresh_list(None); go_top()
+    ok = False
+    for _ in range(6):
+        ns = nodes(); ys = [b[1] for t, b in ns if t == "휴식 10분"]
+        btns = sorted([b for t, b in ns if t.startswith("▶  실행") and ys and b[1] >= ys[0]], key=lambda b: b[1])
+        if btns:
+            b = btns[0]; sh("input", "tap", str((b[0] + b[2]) // 2), str((b[1] + b[3]) // 2)); ok = True; break
+        swipe(670, 440, 330)
+    if not ok: return ["휴식 10분 실행 버튼을 못 찾음"]
+    t0 = time.time(); txt = ""
+    while time.time() - t0 < 90:
+        time.sleep(2); txt = screen()
+        if "기다립니다" in txt or "■" in txt: break
+    if "기다립니다" not in txt: return ["기다리는 단계에 도달하지 못함: " + txt[:200]]
+    time.sleep(3)
+    if not tap_node(lambda t: t == "중지"): return ["중지 버튼이 없음"]
+    time.sleep(2); log = screen().split("실행 결과")[-1]          # 목록 카드에도 단계 문구가 보이므로 결과 영역만 본다
+    if "중지했습니다" not in log: f.append("중지 표시가 없음")
+    time.sleep(8); log = screen().split("실행 결과")[-1]
+    if "✓ 알림 ‘10분이" in log or "✓ 운전석 등받이 세우기" in log or "■" in log: f.append("중지 후에도 단계가 이어짐")
+    return f
+
+def u7_reorder_down():
+    """새 루틴에서 ▼ 로 순서를 바꾸고 저장 후 실행해 순서대로 적용되는지 본다."""
+    f = []
+    fresh_list(None)
+    if not tap_scroll("＋  새 루틴 만들기"): return ["새 루틴 버튼 없음"]
+    time.sleep(1.5)
+    if not on_editor(): return ["편집 화면이 안 열림"]
+    type_title("Order")
+    for lab in ["풍량", "온도", "공조 전원"]:
+        if not add_feature(lab): f.append("기능 추가 실패: " + lab)
+    row_button("1. 풍량", "▼"); row_button("2. 풍량", "▼")          # 풍량을 맨 뒤로
+    go_top(); seen = set(t for t, _ in editor_rows())
+    for w in ["1. 온도", "2. 공조 전원", "3. 풍량"]:
+        if not any(x.startswith(w) for x in seen): f.append(f"순서 불일치: {w!r} (실제 {sorted(seen)})")
+    if not tap_leave_editor("저장"): f.append("저장 후에도 편집 화면")
+    if run_routine_by_title("Order") is None: f.append("목록에 Order 루틴이 없음")
+    return f
+
+CASES = [("U1_만들기_조절_순서_삭제_저장_실행", u1_create), ("U2_검증_취소", u2_validation), ("U3_기존편집", u3_edit_existing), ("U4_삭제", u4_delete), ("U5_기본으로되돌리기", u5_reset), ("U6_기본루틴_실행중_중지", u6_stop_default), ("U7_아래로순서변경", u7_reorder_down)]
 
 def main():
     args = sys.argv[1:]; res = []

@@ -18,7 +18,7 @@
 - 정보 수집·서버 통신 없음. 인터넷 권한을 요청하지 않는다.
 
 ## APK 위치
-`apk/염준호_원터치루틴_release.apk` (release 서명본)
+`apk/yeomjunho_oneTouchRoutine_release.apk` (release 서명본)
 
 ## 코드 구조
 | 파일 | 역할 |
