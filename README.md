@@ -136,10 +136,31 @@ adb install -r --user 10 app/build/outputs/apk/debug/app-debug.apk
 
 ## 시험 (`tests/`)
 에뮬레이터 콘솔(`adb forward tcp:8088 tcp:8088`)로 차량 상태를 읽어 기대값과 비교한다.
-- `routine_test.py` 루틴 실행 · `routine_ui_test.py` 화면 조작 · `resume_test.py` 이어서 실행
-- `record_demo.py` 시연 영상 녹화 → `demo/`
+
+**준비**
+1. 에뮬레이터를 켜고 부팅이 끝날 때까지 기다린다.
+2. debug 빌드를 설치한다. 시험이 루틴을 앱 저장소에 직접 넣어서 release APK로는 돌릴 수 없다.
+   ```
+   ./gradlew assembleDebug
+   adb install -r --user 10 app/build/outputs/apk/debug/app-debug.apk
+   adb forward tcp:8088 tcp:8088
+   ```
+3. 실기기가 같이 연결돼 있으면 `export ANDROID_SERIAL=emulator-5554`를 먼저 한다.
+
+**실행** (저장소 폴더에서, 파일마다 따로 실행한다)
+
+| 스크립트 | 내용 | 전체 실행 | 일부만 실행 |
+|---|---|---|---|
+| `tests/routine_test.py` | 루틴을 넣고 실행해 차량 상태를 기대값과 비교 | `python3 tests/routine_test.py` | `python3 tests/routine_test.py C3` |
+| `tests/routine_ui_test.py` | 화면을 눌러 루틴 만들기·수정·삭제·중지 확인 | `python3 tests/routine_ui_test.py` | `python3 tests/routine_ui_test.py U8` |
+| `tests/resume_test.py` | 대기 중 앱 종료 후 이어서 실행 확인 | `python3 tests/resume_test.py` | - |
+| `tests/record_demo.py` | 시연 영상 녹화 → `demo/` | `python3 tests/record_demo.py` | - |
+
+- 인자는 시험 이름의 앞부분이다(`U1 U6`처럼 여러 개 가능). 결과는 `PASS`/`FAIL` 한 줄씩 나오고 끝에 통과 개수가 나온다.
+- `routine_test.py`는 `--fast`를 붙이면 대기가 긴 시험을 건너뛴다.
+- 화면 시험 전체는 약 15분 걸린다. 도는 동안 에뮬레이터를 만지지 말고, 한 번에 하나만 돌린다.
+- 한글 입력은 adb로 안 되므로 시험의 이름과 알림 문구는 영문이다.
 
 ## 한계
 - 실차 동작(등받이 움직임, 앰비언트, 좌석별 독서등, 내비 안내 시작)은 확인하지 못했다.
 - 내비 경로는 요청만 보낸다. 안내 시작은 내비 앱이 한다.
-- 앱 실행은 루틴 도중 다른 앱이 앞으로 나온 뒤에는 이어지는 앱 실행이 막힐 수 있어, 앱 실행 단계는 루틴의 마지막에 두는 것이 안전하다. 에뮬레이터에서 아직 확인하지 못했다.

@@ -274,15 +274,18 @@ class RoutineActivity : Activity() {
         root.addView(head)
         root.addView(rule(4), lp(M, px(4), 0f, 0, 8))
         val col = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        val btns = HashMap<String, Button>()
         for ((g, types) in groups) {
             col.addView(txt(g, 15f, mute, true), lp(t = 16, b = 4))
             col.addView(rule(2))
             for (t in types) {
                 val d = Routines.def(t)
-                col.addView(btn(d.label, 21f, 2, ink, 58) { pick(t) }.also { (it as Button).gravity = Gravity.START or Gravity.CENTER_VERTICAL; it.setPadding(0, 0, 0, 0) }, lp())
+                col.addView(btn(d.label, 21f, 2, ink, 58) { pick(t) }.also { (it as Button).gravity = Gravity.START or Gravity.CENTER_VERTICAL; it.setPadding(0, 0, 0, 0); btns[t] = it }, lp())
                 col.addView(rule(1))
             }
         }
+        // 이 차가 지원하지 않는다고 답한 항목은 흐리게 (눌러서 넣을 수는 있다)
+        for ((t, b) in btns) RoutineRunner.probe(t) { ok -> if (!ok) runOnUiThread { b.alpha = 0.35f; b.text = Routines.def(t).label + "   (이 차는 지원 안 함)" } }
         root.addView(ScrollView(this).apply { addView(col) }, LinearLayout.LayoutParams(M, 0, 1f))
         setContentView(root)
     }

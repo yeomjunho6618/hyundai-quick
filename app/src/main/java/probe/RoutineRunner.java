@@ -186,6 +186,31 @@ public final class RoutineRunner {
             return Unit.INSTANCE; }, e -> { d.fail(msg(e)); return Unit.INSTANCE; });
     }
 
+    /** 기능 추가 화면용: 이 차가 type 기능을 지원하는지 조회한다. 차가 없다고 답한 경우에만 false 를 돌려주고, 조회 오류나 확인 수단이 없는 항목은 알리지 않는다 */
+    public static void probe(String type, final java.util.function.Consumer<Boolean> cb) {
+        final Vehicle v = vehicle;
+        if (v == null) return;
+        try {
+            switch (type) {
+                case "hvac_power": v.getHVAC().checkHvacPowerCapabilities(a -> { cb.accept(!a.isEmpty()); return Unit.INSTANCE; }, e -> Unit.INSTANCE); break;
+                case "hvac_ac": v.getHVAC().checkHvacAcCapabilities(a -> { cb.accept(!a.isEmpty()); return Unit.INSTANCE; }, e -> Unit.INSTANCE); break;
+                case "hvac_auto": v.getHVAC().checkHvacAutoCapabilities(a -> { cb.accept(!a.isEmpty()); return Unit.INSTANCE; }, e -> Unit.INSTANCE); break;
+                case "hvac_recirc": v.getHVAC().checkHvacRecirculationCapabilities(a -> { cb.accept(!a.isEmpty()); return Unit.INSTANCE; }, e -> Unit.INSTANCE); break;
+                case "air_cleaner": v.getHVAC().checkHvacAirCleanerCapabilities(a -> { cb.accept(!a.isEmpty()); return Unit.INSTANCE; }, e -> Unit.INSTANCE); break;
+                case "hvac_fan": v.getHVAC().checkHvacFanSpeedCapabilities(m -> { cb.accept(!m.isEmpty()); return Unit.INSTANCE; }, e -> Unit.INSTANCE); break;
+                case "hvac_temp": v.getHVAC().checkHvacTemperatureCapabilities(m -> { cb.accept(!m.isEmpty()); return Unit.INSTANCE; }, e -> Unit.INSTANCE); break;
+                case "seat_heat": v.getSeat().checkSeatTemperatureCapabilities(m -> { cb.accept(!m.isEmpty()); return Unit.INSTANCE; }, e -> Unit.INSTANCE); break;
+                case "seat_recline": v.getSeat().checkSeatBackrestAngleCapabilities(m -> { cb.accept(!m.isEmpty()); return Unit.INSTANCE; }, e -> Unit.INSTANCE); break;
+                case "ambient": v.getLight().checkAmbientLightSwitchCapabilities((c, m) -> { cb.accept(!m.isEmpty()); return Unit.INSTANCE; }, e -> Unit.INSTANCE); break;
+                case "reading_rear": v.getLight().checkReadingLightSwitchCapabilities(m -> {
+                        boolean rear = false;
+                        for (SeatArea a : m.keySet()) if (has(a, SeatValue.ROW_2_LEFT) || has(a, SeatValue.ROW_2_CENTER) || has(a, SeatValue.ROW_2_RIGHT)) rear = true;
+                        cb.accept(rear); return Unit.INSTANCE; }, e -> Unit.INSTANCE); break;
+                default: break;
+            }
+        } catch (Throwable t) { android.util.Log.i("ROUTINE", "probe " + type, t); }
+    }
+
     private static void launchApp(Step s, Done d) {
         if (s.getArg().isEmpty()) { d.fail("실행할 앱을 정해 주세요"); return; }
         android.content.Intent i = app.getPackageManager().getLaunchIntentForPackage(s.getArg());
