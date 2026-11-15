@@ -112,8 +112,10 @@ class RoutineActivity : Activity() {
             setLayout(px(560), LinearLayout.LayoutParams.WRAP_CONTENT)
             setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         }
+        shown = d
         d.show()
     }
+    private var shown: android.app.Dialog? = null
 
     // 목록
     private fun showList() {
@@ -204,17 +206,22 @@ class RoutineActivity : Activity() {
                 val d = Routines.def(s.type)
                 val top = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; minimumHeight = px(64) }
                 top.addView(txt("${i + 1}. ${Routines.describe(s)}", 19f).apply {
-                    if (d.kind == Kind.NAVI || d.kind == Kind.TEXT) { setTypeface(null, Typeface.BOLD); paintFlags = paintFlags or Paint.UNDERLINE_TEXT_FLAG; setOnClickListener { editText(s) { n -> steps[i] = n; redraw() } } }
+                    if (d.kind == Kind.NAVI || d.kind == Kind.TEXT || d.kind == Kind.APP) { setTypeface(null, Typeface.BOLD); paintFlags = paintFlags or Paint.UNDERLINE_TEXT_FLAG; setOnClickListener { if (d.kind == Kind.APP) pickApp(s) { n -> steps[i] = n; redraw() } else editText(s) { n -> steps[i] = n; redraw() } } }
                 }, lp(0, W, 1f, r = 6))
                 // ＋/－: 내비는 경로 옵션을 돌려 가며, 나머지는 step 만큼 값 조절
                 fun change(delta: Int) {
                     steps[i] = when (d.kind) {
                         Kind.NAVI -> { val k = Routines.naviOptions.indexOfFirst { it.first == s.opt }.coerceAtLeast(0); s.copy(opt = Routines.naviOptions[(k + delta + Routines.naviOptions.size) % Routines.naviOptions.size].first) }
-                        Kind.TEXT -> s
-                        else -> s.copy(value = (s.value + delta * d.step).coerceIn(d.min, d.max))
+                        Kind.TEXT, Kind.APP -> s
+                        else -> {
+                            var v = s.value + delta * d.step
+                            // 기다리기는 1분에서 －를 누르면 60분, 60분에서 ＋를 누르면 1분으로 돌아간다
+                            if (d.type == "wait_min") { if (v < d.min) v = d.max else if (v > d.max) v = d.min }
+                            s.copy(value = v.coerceIn(d.min, d.max))
+                        }
                     }; redraw()
                 }
-                if (d.kind != Kind.TEXT) {
+                if (d.kind != Kind.TEXT && d.kind != Kind.APP) {
                     top.addView(btn("－", 24f, 1, h = 52) { change(-1) }, lp(px(58), W, r = 6))
                     top.addView(btn("＋", 24f, 1, h = 52) { change(1) }, lp(px(58), W, r = 6))
                 }
@@ -256,7 +263,8 @@ class RoutineActivity : Activity() {
         "공조" to listOf("hvac_power", "hvac_auto", "hvac_ac", "hvac_temp", "hvac_fan", "hvac_recirc", "air_cleaner"),
         "시트" to listOf("seat_heat", "wheel_heat", "seat_recline"),
         "조명" to listOf("cabin_light", "reading_rear", "ambient"),
-        "흐름" to listOf("wait_min", "notify"))
+        "흐름" to listOf("wait_min", "notify"),
+        "앱" to listOf("app"))
 
     private fun showPicker(pick: (String) -> Unit) {
         val root = page()
@@ -277,6 +285,24 @@ class RoutineActivity : Activity() {
         }
         root.addView(ScrollView(this).apply { addView(col) }, LinearLayout.LayoutParams(M, 0, 1f))
         setContentView(root)
+    }
+
+    /** 설치된 앱 중에서 루틴이 실행할 앱을 고른다. */
+    private fun pickApp(s: Step, done: (Step) -> Unit) {
+        val pm = packageManager
+        val apps = pm.queryIntentActivities(android.content.Intent(android.content.Intent.ACTION_MAIN).addCategory(android.content.Intent.CATEGORY_LAUNCHER), 0)
+            .map { it.activityInfo.packageName to it.loadLabel(pm).toString() }
+            .filter { it.first != packageName }.distinctBy { it.first }.sortedBy { it.second }
+        val col = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        if (apps.isEmpty()) col.addView(txt("실행할 수 있는 앱이 없습니다", 18f, mute))
+        for ((pkg, label) in apps) {
+            col.addView(btn(label, 20f, 2, ink, 52) { shown?.dismiss(); done(s.copy(arg = pkg, opt = label)) }.also { (it as Button).gravity = Gravity.START or Gravity.CENTER_VERTICAL; it.setPadding(0, 0, 0, 0) }, lp())
+            col.addView(rule(1))
+        }
+        val list = object : ScrollView(this) {
+            override fun onMeasure(w: Int, h: Int) = super.onMeasure(w, android.view.View.MeasureSpec.makeMeasureSpec(px(380), android.view.View.MeasureSpec.AT_MOST))
+        }.apply { addView(col) }
+        sheet("실행할 앱", body = list, ok = "닫기", cancel = null)
     }
 
     /** 내비 목적지(즐겨찾기 이름) 또는 알림 문구를 입력한다. */

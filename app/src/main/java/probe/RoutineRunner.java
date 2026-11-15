@@ -164,6 +164,7 @@ public final class RoutineRunner {
             case "seat_recline": recline(s, d); break;
             case "notify": notifyUser(s.getArg()); d.ok(""); break;
             case "navi": navi(s, d); break;
+            case "app": launchApp(s, d); break;
             default: d.fail("알 수 없는 기능");
         }
     }
@@ -183,6 +184,15 @@ public final class RoutineRunner {
                     return Unit.INSTANCE; }, e -> { d.fail(msg(e)); return Unit.INSTANCE; });
                 return Unit.INSTANCE; }, e -> { d.fail(msg(e)); return Unit.INSTANCE; });
             return Unit.INSTANCE; }, e -> { d.fail(msg(e)); return Unit.INSTANCE; });
+    }
+
+    private static void launchApp(Step s, Done d) {
+        if (s.getArg().isEmpty()) { d.fail("실행할 앱을 정해 주세요"); return; }
+        android.content.Intent i = app.getPackageManager().getLaunchIntentForPackage(s.getArg());
+        if (i == null) { d.fail("설치되어 있지 않습니다"); return; }
+        i.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+        app.startActivity(i);
+        d.ok("");
     }
 
     private static void notifyUser(String text) {

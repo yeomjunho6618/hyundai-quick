@@ -90,6 +90,8 @@ case("C1_내비실패후에도계속", [S("navi", arg="", opt="SCHOOL_ZONE"), S(
      state=[(FAN, 4)],
      log=[("✕", "내비 목적지", "목적지를 정해"), ("✕", "‘회사’", "비어 있습니다"), ("✕", "없는곳XYZ", "없습니다"), ("✓", "풍량 4단", None)])
 case("C2_내비집_등록됨", [S("navi", arg="집", opt="RECOMMENDED")], log=[("✓", "‘집’", None)])   # 내비 앱에 집을 등록해 둔 상태에서만 통과
+case("C3_앱없음_다음계속", [S("app", 0, "no.such.pkg", "없는앱"), S("app", 0, "", ""), S("hvac_fan", 4)],
+     log=[("✕", "앱 실행", "설치되어 있지 않습니다"), ("✕", "앱 실행", "정해 주세요"), ("✓", "풍량 4단", None)], state=[(FAN, 4)])
 case("D1_빈루틴", [], log=[])
 case("D2_긴조합_15단계", [S("hvac_power", 1), S("hvac_auto", 0), S("hvac_ac", 1), S("hvac_recirc", 1), S("hvac_temp", 215), S("hvac_fan", 5), S("seat_heat", 2), S("wheel_heat", 1),
                          S("cabin_light", 1), S("reading_rear", 1), S("ambient", 30), S("notify", arg="15단계 끝"), S("air_cleaner", 1), S("hvac_fan", 3), S("hvac_temp", 225)],

@@ -6,13 +6,13 @@ import org.json.JSONObject
 
 /** 루틴 = 제목 + 실행할 단계 목록 */
 // value: 온도는 x10 정수(22.5도 = 225), 켜기/끄기는 1/0, 등받이는 +눕힘 -세움(초)
-// arg: 내비는 즐겨찾기 이름, 알림은 문구 / opt: 내비 경로 옵션
+// arg: 내비는 즐겨찾기 이름, 알림은 문구, 앱 실행은 패키지 이름 / opt: 내비 경로 옵션, 앱 실행은 앱 이름
 data class Step(val type: String, val value: Int = 0, val arg: String = "", val opt: String = "")
 data class Routine(val id: String, val title: String, val steps: List<Step>)
 
 /** 기능 종류. min..max 를 step 씩 조절. ONOFF 는 0=끄기 1=켜기 */
 data class Def(val type: String, val label: String, val min: Int, val max: Int, val step: Int, val def: Int, val kind: Kind = Kind.NUM, val unit: String = "")
-enum class Kind { NUM, ONOFF, TEMP, RECLINE, NAVI, TEXT }
+enum class Kind { NUM, ONOFF, TEMP, RECLINE, NAVI, TEXT, APP }
 
 object Routines {
     // 기능 추가할 땐 여기 한 줄 + RoutineRunner.exec 에 case 한 줄
@@ -33,6 +33,7 @@ object Routines {
         Def("seat_recline", "운전석 등받이", -10, 10, 1, 5, Kind.RECLINE),
         Def("wait_min", "기다리기", 1, 60, 1, 10, unit = "분"),
         Def("notify", "알림 보내기", 0, 0, 1, 0, Kind.TEXT),
+        Def("app", "앱 실행", 0, 0, 1, 0, Kind.APP),
     )
     private val byType = catalog.associateBy { it.type }
     fun def(type: String) = byType.getValue(type)
@@ -48,6 +49,7 @@ object Routines {
             Kind.RECLINE -> if (s.value == 0) "${d.label} 그대로" else "${d.label} ${if (s.value > 0) "눕히기" else "세우기"} ${Math.abs(s.value)}초"
             Kind.NAVI -> "내비 목적지 ‘${s.arg.ifBlank { "(정해 주세요)" }}’ · ${naviOptions.firstOrNull { it.first == s.opt }?.second ?: "추천 경로"}"
             Kind.TEXT -> "알림 ‘${s.arg}’"
+            Kind.APP -> "앱 실행 ‘${s.opt.ifBlank { "(정해 주세요)" }}’"
             Kind.NUM -> if (d.type == "ambient" && s.value == 0) "${d.label} 끄기" else if (d.type.endsWith("heat") && s.value == 0) "${d.label} 끄기" else "${d.label} ${s.value}${d.unit}"
         }
     }

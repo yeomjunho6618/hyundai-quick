@@ -304,7 +304,26 @@ def u7_reorder_down():
     if run_routine_by_title("Order") is None: f.append("목록에 Order 루틴이 없음")
     return f
 
-CASES = [("U1_만들기_조절_순서_삭제_저장_실행", u1_create), ("U2_검증_취소", u2_validation), ("U3_기존편집", u3_edit_existing), ("U4_삭제", u4_delete), ("U5_기본으로되돌리기", u5_reset), ("U6_기본루틴_실행중_중지", u6_stop_default), ("U7_아래로순서변경", u7_reorder_down)]
+def u8_wait_wrap():
+    """기다리기: 1분에서 －는 60분, 60분에서 ＋는 1분으로 돌아간다."""
+    f = []
+    fresh_list(None)
+    if not tap_scroll("＋  새 루틴 만들기"): return ["새 루틴 버튼 없음"]
+    time.sleep(1.5)
+    if not on_editor(): return ["편집 화면이 안 열림"]
+    type_title("Wait")
+    if not add_feature("기다리기"): return ["기다리기 추가 실패"]
+    def now(): return [t for t, _ in editor_rows() if t.startswith("1. ")]
+    row_button("1. 기다리기", "－")                      # 10 → 9
+    for _ in range(8): row_button("1. 기다리기", "－")    # → 1
+    if not any("1분" in t for t in now()): f.append("1분까지 내려가지 않음: %s" % now())
+    row_button("1. 기다리기", "－")
+    if not any("60분" in t for t in now()): f.append("1분에서 －를 눌러도 60분이 되지 않음: %s" % now())
+    row_button("1. 기다리기", "＋")
+    if not any("1분" in t and "60" not in t for t in now()): f.append("60분에서 ＋를 눌러도 1분이 되지 않음: %s" % now())
+    return f
+
+CASES = [("U1_만들기_조절_순서_삭제_저장_실행", u1_create), ("U2_검증_취소", u2_validation), ("U3_기존편집", u3_edit_existing), ("U4_삭제", u4_delete), ("U5_기본으로되돌리기", u5_reset), ("U6_기본루틴_실행중_중지", u6_stop_default), ("U7_아래로순서변경", u7_reorder_down), ("U8_기다리기_순환", u8_wait_wrap)]
 
 def main():
     args = sys.argv[1:]; res = []
